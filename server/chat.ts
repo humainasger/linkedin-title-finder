@@ -165,7 +165,11 @@ async function interviewStep(
 
   let parsed
   try {
-    const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
+    // Try to extract JSON from various model outputs
+    let jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
+    // If the model wrapped JSON in text, find the JSON object
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/)
+    if (jsonMatch) jsonStr = jsonMatch[0]
     parsed = JSON.parse(jsonStr)
   } catch {
     return {
@@ -173,6 +177,26 @@ async function interviewStep(
       message: text,
       questionNumber: 0,
       totalQuestions: 5
+    }
+  }
+
+  // Normalize the response - strip extra fields the model adds
+  if (parsed.type === 'question') {
+    return {
+      type: 'question' as const,
+      message: parsed.message || '',
+      questionNumber: parsed.questionNumber || 0,
+      totalQuestions: parsed.totalQuestions || 5,
+      context: parsed.context || {}
+    }
+  }
+
+  if (parsed.type === 'ready') {
+    return {
+      type: 'ready' as const,
+      message: parsed.message || 'Let me find the best titles for you.',
+      context: parsed.context || {},
+      searchDescription: parsed.searchDescription || ''
     }
   }
 

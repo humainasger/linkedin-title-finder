@@ -207,24 +207,10 @@
     }
 
     .msg-question .q-progress {
-      display: flex;
-      gap: 4px;
       margin-top: 10px;
-    }
-
-    .msg-question .q-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-    }
-
-    .msg-question .q-dot.active {
-      background: var(--accent);
-    }
-
-    .msg-question .q-dot.done {
-      background: var(--tag-high-text);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
     .msg-assistant .intro {
@@ -423,6 +409,88 @@
       margin-bottom: 4px;
     }
 
+    .url-scanner {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .scanner-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .scanner-form {
+      display: flex;
+      gap: 8px;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+
+    .scanner-form input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+
+    .scanner-form input:focus {
+      border-color: var(--accent);
+    }
+
+    .scanner-form button {
+      background: var(--text);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      cursor: pointer;
+      min-height: 40px;
+    }
+
+    .scanner-form button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .msg-scan {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+    }
+
+    .msg-scan .scan-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .msg-scan .scan-company {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .msg-scan .scan-detail {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
     @media (max-width: 480px) {
       header h1 { font-size: 1.4rem; }
       .msg-user { max-width: 90%; }
@@ -499,6 +567,13 @@
             <div>Get titles to copy</div>
           </div>
         </div>
+        <div class="url-scanner" id="url-scanner">
+          <div class="scanner-label">Have a website? I'll figure out the rest.</div>
+          <div class="scanner-form">
+            <input type="text" id="url-input" placeholder="yourcompany.com" autocomplete="off">
+            <button onclick="scanWebsite()" id="scan-btn">Scan</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -533,6 +608,69 @@
     function loadExample(idx) {
       msgInput.value = EXAMPLES[idx]
       send(new Event('submit'))
+    }
+
+    async function scanWebsite() {
+      const urlInput = document.getElementById('url-input')
+      const scanBtn = document.getElementById('scan-btn')
+      const url = urlInput.value.trim()
+      if (!url) return
+
+      scanBtn.disabled = true
+      scanBtn.textContent = 'Scanning...'
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        })
+
+        if (!res.ok) throw new Error('Scan failed')
+        const data = await res.json()
+
+        // Remove welcome section
+        const welcome = document.getElementById('welcome')
+        if (welcome) welcome.remove()
+        const examples = document.getElementById('examples-section')
+        if (examples) examples.remove()
+
+        // Show scan result
+        const scanDiv = document.createElement('div')
+        scanDiv.className = 'msg msg-assistant msg-scan'
+        const details = [
+          data.product ? `Product: ${data.product}` : '',
+          data.industry ? `Industry: ${data.industry}` : '',
+          data.targetCustomers ? `Customers: ${data.targetCustomers}` : ''
+        ].filter(Boolean).join(' · ')
+
+        scanDiv.innerHTML = `
+          <div class="scan-label">Website scanned</div>
+          <div class="scan-company">${esc(data.company || url)}</div>
+          <div class="scan-detail">${esc(details)}</div>
+        `
+        chat.appendChild(scanDiv)
+
+        // Pre-fill the chat with context from the scan
+        const context = [
+          data.company ? `I'm from ${data.company}` : '',
+          data.product ? `and we ${data.product}` : '',
+          data.targetCustomers ? `Our target customers are ${data.targetCustomers}` : '',
+          data.industry ? `in the ${data.industry} space` : ''
+        ].filter(Boolean).join(', ')
+
+        if (context) {
+          msgInput.value = context + '. I want to find the right LinkedIn ad titles to reach my audience.'
+          msgInput.focus()
+        }
+
+        chat.scrollTop = chat.scrollHeight
+      } catch (err) {
+        showToast('Could not scan that website. Check the URL.')
+      }
+
+      scanBtn.disabled = false
+      scanBtn.textContent = 'Scan'
     }
 
     async function send(e) {
@@ -615,15 +753,9 @@
       const div = document.createElement('div')
       div.className = 'msg msg-assistant msg-question'
 
-      let dots = ''
-      for (let i = 1; i <= total; i++) {
-        const cls = i < questionCount ? 'done' : i === questionCount ? 'active' : ''
-        dots += `<div class="q-dot ${cls}"></div>`
-      }
-
       div.innerHTML = `
         <div class="q-text">${esc(data.message)}</div>
-        <div class="q-progress">${dots}</div>
+        <div class="q-progress">Question ${questionCount} of ${total}</div>
       `
       chat.appendChild(div)
     }

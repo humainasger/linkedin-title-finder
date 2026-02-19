@@ -52,6 +52,70 @@ app.post('/api/chat', async (c) => {
   }
 })
 
+// Website scanner - fetches a URL and extracts company info
+app.post('/api/scan', async (c) => {
+  const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  if (!rateLimit(ip)) {
+    return c.json({ error: 'Too many requests. Please wait a minute.' }, 429)
+  }
+
+  const body = await c.req.json<{ url: string }>()
+  if (!body.url) return c.json({ error: 'url required' }, 400)
+
+  try {
+    let url = body.url.trim()
+    if (!url.startsWith('http')) url = 'https://' + url
+
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TitleFinder/1.0)' },
+      signal: AbortSignal.timeout(8000)
+    })
+    const html = await res.text()
+
+    // Extract text content (strip tags, scripts, styles)
+    const cleaned = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 4000)
+
+    // Extract meta info
+    const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i)
+    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["'](.*?)["']/i)
+    const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["'](.*?)["']/i)
+
+    // Use Claude to summarize the company
+    const { default: Anthropic } = await import('@anthropic-ai/sdk')
+    const client = new Anthropic()
+
+    const summary = await client.messages.create({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 300,
+      system: 'You analyze websites to extract company information. Return a brief JSON object with: company (name), product (what they sell/do), industry, targetCustomers (who buys from them), companySize (if detectable). Be concise. Only JSON, no explanation.',
+      messages: [{
+        role: 'user',
+        content: `Website: ${url}\nTitle: ${titleMatch?.[1] || 'unknown'}\nMeta description: ${descMatch?.[1] || ogDescMatch?.[1] || 'none'}\n\nPage content:\n${cleaned}`
+      }]
+    })
+
+    const summaryText = (summary.content[0] as any).text || '{}'
+    let parsed
+    try {
+      const jsonMatch = summaryText.match(/\{[\s\S]*\}/)
+      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: summaryText }
+    } catch {
+      parsed = { raw: summaryText }
+    }
+
+    return c.json({ ...parsed, url })
+  } catch (e: any) {
+    console.error('Scan error:', e.message)
+    return c.json({ error: 'Could not scan that website. Check the URL and try again.' }, 500)
+  }
+})
+
 // Serve static files manually (avoids serveStatic import issues)
 const publicDir = join(root, 'public')
 const mimeTypes: Record<string, string> = {
