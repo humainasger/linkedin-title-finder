@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Title Finder — Asger Teglgaard</title>
+  <meta name="description" content="Find the right LinkedIn job titles for your ad campaigns. AI-powered audience builder with 23,000+ official titles.">
+  <link rel="preconnect" href="https://use.typekit.net">
+  <link rel="stylesheet" href="https://use.typekit.net/your-kit-id.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #FAF8F5;
+      --bg-chat: #FFFFFF;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --accent: #c2410c;
+      --accent-light: #fed7aa;
+      --border: #e5e0d8;
+      --tag-bg: #f3efe8;
+      --tag-high: #dcfce7;
+      --tag-high-text: #166534;
+      --tag-med: #fef9c3;
+      --tag-med-text: #854d0e;
+      --tag-explore: #e0e7ff;
+      --tag-explore-text: #3730a3;
+      --font-heading: 'new-kansas', Georgia, serif;
+      --font-body: 'acumin-pro', system-ui, -apple-system, sans-serif;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 32px 0 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    header .badge {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .msg {
+      max-width: 100%;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--text);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 16px 16px 4px 16px;
+      max-width: 80%;
+      font-size: 0.95rem;
+    }
+
+    .msg-assistant {
+      align-self: flex-start;
+      width: 100%;
+    }
+
+    .msg-assistant .intro {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .msg-assistant .reasoning {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .msg-assistant .tip {
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .tier {
+      margin-bottom: 12px;
+    }
+
+    .tier-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tier-label .count {
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .tier-high .tier-label { color: var(--tag-high-text); }
+    .tier-medium .tier-label { color: var(--tag-med-text); }
+    .tier-explore .tier-label { color: var(--tag-explore-text); }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      font-family: var(--font-body);
+    }
+
+    .tag:active { transform: scale(0.96); }
+
+    .tier-high .tag { background: var(--tag-high); color: var(--tag-high-text); }
+    .tier-medium .tag { background: var(--tag-med); color: var(--tag-med-text); }
+    .tier-explore .tag { background: var(--tag-explore); color: var(--tag-explore-text); }
+
+    .tag.copied {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .actions button {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .actions button:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: all 0.2s;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+      align-self: flex-start;
+    }
+
+    .typing span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      animation: bounce 1.4s infinite;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-8px); }
+    }
+
+    #input-area {
+      padding: 12px 0 24px;
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+    }
+
+    #input-area form {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-chat);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    #input-area input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 10px 12px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    #input-area input::placeholder { color: #aaa; }
+
+    #input-area button {
+      background: var(--text);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      min-height: 44px;
+    }
+
+    #input-area button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    footer {
+      text-align: center;
+      padding: 12px 0 20px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-decoration-color: var(--border);
+      text-underline-offset: 2px;
+    }
+
+    .welcome {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .welcome h2 {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .welcome p { font-size: 0.9rem; margin-bottom: 16px; }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .examples button {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .examples button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.4rem; }
+      .msg-user { max-width: 90%; }
+      .tag { font-size: 0.8rem; padding: 4px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>LinkedIn Title Finder</h1>
+      <p>Describe your audience. Get the exact job titles for Campaign Manager.</p>
+      <span class="badge">23,400+ official LinkedIn titles</span>
+    </header>
+
+    <div id="chat">
+      <div class="welcome">
+        <h2>Who are you trying to reach?</h2>
+        <p>Describe your target audience and I'll find the matching LinkedIn job titles.</p>
+        <div class="examples">
+          <button onclick="sendExample(this)">Marketing decision makers at B2B SaaS</button>
+          <button onclick="sendExample(this)">CFOs and finance leaders</button>
+          <button onclick="sendExample(this)">HR professionals who buy software</button>
+          <button onclick="sendExample(this)">Procurement in manufacturing</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="input-area">
+      <form onsubmit="send(event)">
+        <input type="text" id="msg" placeholder="Describe your target audience..." autocomplete="off" autofocus>
+        <button type="submit" id="btn">Send</button>
+      </form>
+    </div>
+
+    <footer>
+      Built by <a href="https://asger.me" target="_blank">Asger Teglgaard</a>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const chat = document.getElementById('chat')
+    const msg = document.getElementById('msg')
+    const btn = document.getElementById('btn')
+    let history = []
+    let busy = false
+
+    function sendExample(el) {
+      msg.value = el.textContent
+      send(new Event('submit'))
+    }
+
+    async function send(e) {
+      e.preventDefault()
+      const text = msg.value.trim()
+      if (!text || busy) return
+
+      // Remove welcome
+      const welcome = chat.querySelector('.welcome')
+      if (welcome) welcome.remove()
+
+      // Add user message
+      const userDiv = document.createElement('div')
+      userDiv.className = 'msg msg-user'
+      userDiv.textContent = text
+      chat.appendChild(userDiv)
+
+      msg.value = ''
+      busy = true
+      btn.disabled = true
+
+      // Typing indicator
+      const typing = document.createElement('div')
+      typing.className = 'typing'
+      typing.innerHTML = '<span></span><span></span><span></span>'
+      chat.appendChild(typing)
+      chat.scrollTop = chat.scrollHeight
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history })
+        })
+
+        typing.remove()
+
+        if (!res.ok) throw new Error('Request failed')
+        const data = await res.json()
+
+        history.push({ role: 'user', content: text })
+        history.push({ role: 'assistant', content: data.message })
+        if (history.length > 16) history = history.slice(-16)
+
+        renderResponse(data)
+      } catch (err) {
+        typing.remove()
+        const errDiv = document.createElement('div')
+        errDiv.className = 'msg msg-assistant'
+        errDiv.innerHTML = '<div class="intro" style="color:var(--accent)">Something went wrong. Try again.</div>'
+        chat.appendChild(errDiv)
+      }
+
+      busy = false
+      btn.disabled = false
+      chat.scrollTop = chat.scrollHeight
+    }
+
+    function renderResponse(data) {
+      const div = document.createElement('div')
+      div.className = 'msg msg-assistant'
+
+      let html = `<div class="intro">${esc(data.message)}</div>`
+
+      const allTitles = []
+
+      if (data.titles.high?.length) {
+        allTitles.push(...data.titles.high)
+        html += renderTier('High match', data.titles.high, 'high')
+      }
+      if (data.titles.medium?.length) {
+        allTitles.push(...data.titles.medium)
+        html += renderTier('Medium match', data.titles.medium, 'medium')
+      }
+      if (data.titles.explore?.length) {
+        allTitles.push(...data.titles.explore)
+        html += renderTier('Worth exploring', data.titles.explore, 'explore')
+      }
+
+      if (allTitles.length > 0) {
+        html += `<div class="actions">
+          <button onclick="copyAll(this, 'high')">Copy high match (${data.titles.high?.length || 0})</button>
+          <button onclick="copyAll(this, 'all')">Copy all ${data.totalCount} titles</button>
+        </div>`
+      }
+
+      if (data.reasoning) {
+        html += `<div class="reasoning">${esc(data.reasoning)}</div>`
+      }
+      if (data.tip) {
+        html += `<div class="tip">Tip: ${esc(data.tip)}</div>`
+      }
+
+      div.innerHTML = html
+      chat.appendChild(div)
+      chat.scrollTop = chat.scrollHeight
+    }
+
+    function renderTier(label, titles, tier) {
+      const tags = titles.map(t => 
+        `<button class="tag" onclick="copyTag(this, '${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</button>`
+      ).join('')
+      return `<div class="tier tier-${tier}">
+        <div class="tier-label">${label} <span class="count">(${titles.length})</span></div>
+        <div class="tags">${tags}</div>
+      </div>`
+    }
+
+    function copyTag(el, text) {
+      navigator.clipboard.writeText(text)
+      el.classList.add('copied')
+      setTimeout(() => el.classList.remove('copied'), 1000)
+      showToast(`Copied: ${text}`)
+    }
+
+    function copyAll(el, tier) {
+      const container = el.closest('.msg-assistant')
+      let titles = []
+      if (tier === 'all') {
+        container.querySelectorAll('.tag').forEach(t => titles.push(t.textContent))
+      } else {
+        container.querySelectorAll(`.tier-${tier} .tag`).forEach(t => titles.push(t.textContent))
+      }
+      navigator.clipboard.writeText(titles.join(', '))
+      showToast(`Copied ${titles.length} titles to clipboard`)
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast')
+      t.textContent = text
+      t.classList.add('show')
+      setTimeout(() => t.classList.remove('show'), 2000)
+    }
+
+    function esc(s) {
+      const d = document.createElement('div')
+      d.textContent = s
+      return d.innerHTML
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "linkedin-title-finder",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "build": "tsc && cp -r public dist/public && cp job-titles.csv dist/",
+    "start": "node dist/server/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "hono": "^4.7.0",
+    "@hono/node-server": "^1.14.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}
