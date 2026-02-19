@@ -156,6 +156,19 @@
       color: var(--tag-med-text);
     }
 
+    .example-card .card-naming {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      background: var(--tag-bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .example-card .card-more {
       font-size: 0.75rem;
       color: var(--accent);
@@ -232,6 +245,43 @@
       color: var(--accent);
       margin-top: 6px;
       font-style: italic;
+    }
+
+    .audience-name {
+      background: var(--tag-bg);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    .audience-name-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .audience-name-value {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .audience-name-value .copy-hint {
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .audience-name-value:hover .copy-hint {
+      color: var(--accent);
     }
 
     .tier { margin-bottom: 12px; }
@@ -512,40 +562,40 @@
       <h2>Example audiences</h2>
       <div class="example-cards">
         <div class="example-card" onclick="loadExample(0)">
-          <div class="card-label">B2B SaaS</div>
-          <h3>Marketing decision makers</h3>
-          <div class="card-meta">VP+ level, buying marketing tools</div>
+          <div class="card-label">HubSpot &middot; B2B SaaS</div>
+          <h3>Marketing ops decision makers</h3>
+          <div class="card-meta">VP+ at mid-size companies, buying marketing automation</div>
+          <div class="card-naming">LI | HubSpot | MarketingOps | VP+ | MidMarket</div>
           <div class="card-tags">
-            <span class="card-tag">Marketing Director</span>
-            <span class="card-tag">VP Marketing</span>
-            <span class="card-tag">CMO</span>
-            <span class="card-tag med">+22 more</span>
+            <span class="card-tag">VP Marketing Operations</span>
+            <span class="card-tag">Director Marketing Technology</span>
+            <span class="card-tag med">+17 more</span>
           </div>
-          <div class="card-more">Click to explore &rarr;</div>
+          <div class="card-more">Build this audience &rarr;</div>
         </div>
         <div class="example-card" onclick="loadExample(1)">
-          <div class="card-label">Retail</div>
-          <h3>Procurement & buying</h3>
-          <div class="card-meta">Retail buyers, merchandisers, category leads</div>
-          <div class="card-tags">
-            <span class="card-tag">Buyer</span>
-            <span class="card-tag">Category Manager</span>
-            <span class="card-tag">Merchandiser</span>
-            <span class="card-tag med">+18 more</span>
-          </div>
-          <div class="card-more">Click to explore &rarr;</div>
-        </div>
-        <div class="example-card" onclick="loadExample(2)">
-          <div class="card-label">HR Tech</div>
+          <div class="card-label">Deel &middot; HR Tech</div>
           <h3>People & talent leaders</h3>
-          <div class="card-meta">HR directors, talent acquisition, CHRO</div>
+          <div class="card-meta">HR directors and CHROs at companies hiring globally</div>
+          <div class="card-naming">LI | Deel | PeopleLeaders | Director+ | 200-5000</div>
           <div class="card-tags">
             <span class="card-tag">HR Director</span>
-            <span class="card-tag">CHRO</span>
-            <span class="card-tag">Talent Lead</span>
+            <span class="card-tag">VP People Operations</span>
             <span class="card-tag med">+25 more</span>
           </div>
-          <div class="card-more">Click to explore &rarr;</div>
+          <div class="card-more">Build this audience &rarr;</div>
+        </div>
+        <div class="example-card" onclick="loadExample(2)">
+          <div class="card-label">Figma &middot; Design Tools</div>
+          <h3>Design & product leaders</h3>
+          <div class="card-meta">Head of Design, product VPs, creative directors</div>
+          <div class="card-naming">LI | Figma | DesignLeaders | Head+ | Tech</div>
+          <div class="card-tags">
+            <span class="card-tag">Head of Design</span>
+            <span class="card-tag">VP Product Design</span>
+            <span class="card-tag med">+20 more</span>
+          </div>
+          <div class="card-more">Build this audience &rarr;</div>
         </div>
       </div>
     </div>
@@ -600,9 +650,9 @@
     let questionCount = 0
 
     const EXAMPLES = [
-      "I'm selling a marketing automation platform to mid-size B2B SaaS companies. I want to target marketing decision makers who control the budget.",
-      "I want to target retail buyers in Denmark - people who make purchasing decisions for retail chains and department stores.",
-      "We're an HR tech startup selling to people and talent leaders at companies with 200-5000 employees."
+      "I'm HubSpot selling a marketing automation platform to mid-size B2B SaaS companies. I want to target marketing operations decision makers at VP level and above.",
+      "I'm Deel, an HR tech company. I want to target people and talent leaders - HR directors, CHROs - at companies with 200-5000 employees that hire globally.",
+      "I'm Figma selling design collaboration tools. I want to target design and product leaders - Head of Design, VP Product, Creative Directors - at tech companies."
     ]
 
     function loadExample(idx) {
@@ -809,6 +859,15 @@
       div.className = 'msg msg-assistant'
 
       let html = `<div class="intro">${esc(data.message)}</div>`
+
+      // Audience naming convention
+      if (data.audienceName) {
+        html += `<div class="audience-name">
+          <div class="audience-name-label">Audience name for Campaign Manager</div>
+          <div class="audience-name-value" onclick="copyText(this, '${esc(data.audienceName).replace(/'/g, "\\'")}')">${esc(data.audienceName)} <span class="copy-hint">click to copy</span></div>
+        </div>`
+      }
+
       const allTitles = []
 
       if (data.titles?.high?.length) {
@@ -851,6 +910,11 @@
         <div class="tier-label">${label} <span class="count">(${titles.length})</span></div>
         <div class="tags">${tags}</div>
       </div>`
+    }
+
+    function copyText(el, text) {
+      navigator.clipboard.writeText(text)
+      showToast(`Copied: ${text}`)
     }
 
     function copyTag(el, text) {

@@ -82,12 +82,18 @@ IMPORTANT RULES:
 Respond in this exact JSON format:
 {
   "intro": "Brief 1-2 sentence summary referencing their company/product",
+  "audienceName": "LI | CompanyName | AudienceSegment | Seniority | CompanySize",
   "high": ["Title 1", "Title 2"],
   "medium": ["Title 3", "Title 4"],
   "explore": ["Title 5", "Title 6"],
   "reasoning": "Brief explanation of your grouping logic, referencing their specific context",
   "tip": "One practical tip for their specific LinkedIn campaign"
 }
+
+The "audienceName" follows LinkedIn campaign naming convention: Platform | Company | Segment | Seniority | Size/Industry. This should be specific enough to identify the audience at a glance in Campaign Manager. Examples:
+- "LI | HubSpot | MarketingOps | VP+ | MidMarket"
+- "LI | Deel | PeopleLeaders | Director+ | 200-5000"
+- "LI | Figma | DesignLeaders | Head+ | Tech"
 
 - "high": Core targets - directly match the described audience (5-20 titles)
 - "medium": Adjacent matches - good to include for broader reach (5-15 titles)
@@ -286,6 +292,7 @@ ${candidates.join('\n')}`
   return {
     type: 'titles' as const,
     message: parsed.intro || "Here are my suggestions:",
+    audienceName: parsed.audienceName || "",
     titles: { high, medium, explore },
     totalCount: high.length + medium.length + explore.length,
     reasoning: parsed.reasoning || "",
