@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinkedIn Title Finder — Asger Teglgaard</title>
+  <title>LinkedIn Title Finder - Asger Teglgaard</title>
   <meta name="description" content="Find the right LinkedIn job titles for your ad campaigns. AI-powered audience builder with 23,000+ official titles.">
-  <link rel="preconnect" href="https://use.typekit.net">
-  <link rel="stylesheet" href="https://use.typekit.net/your-kit-id.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -25,8 +23,8 @@
       --tag-med-text: #854d0e;
       --tag-explore: #e0e7ff;
       --tag-explore-text: #3730a3;
-      --font-heading: 'new-kansas', Georgia, serif;
-      --font-body: 'acumin-pro', system-ui, -apple-system, sans-serif;
+      --font-heading: Georgia, 'Times New Roman', serif;
+      --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
       --radius: 8px;
       --shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
@@ -52,7 +50,7 @@
     }
 
     header {
-      padding: 32px 0 16px;
+      padding: 32px 0 8px;
       text-align: center;
     }
 
@@ -79,19 +77,102 @@
       margin-top: 8px;
     }
 
+    /* Examples section */
+    .examples-section {
+      padding: 20px 0 8px;
+    }
+
+    .examples-section h2 {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .example-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 520px) {
+      .example-cards { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .example-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .example-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .example-card .card-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .example-card h3 {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .example-card .card-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .example-card .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .example-card .card-tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--tag-high);
+      color: var(--tag-high-text);
+    }
+
+    .example-card .card-tag.med {
+      background: var(--tag-med);
+      color: var(--tag-med-text);
+    }
+
+    .example-card .card-more {
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    /* Chat */
     #chat {
       flex: 1;
       overflow-y: auto;
       padding: 16px 0;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
 
-    .msg {
-      max-width: 100%;
-      animation: fadeIn 0.2s ease;
-    }
+    .msg { max-width: 100%; animation: fadeIn 0.2s ease; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -111,6 +192,39 @@
     .msg-assistant {
       align-self: flex-start;
       width: 100%;
+    }
+
+    .msg-question {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .msg-question .q-text {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .msg-question .q-progress {
+      display: flex;
+      gap: 4px;
+      margin-top: 10px;
+    }
+
+    .msg-question .q-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .msg-question .q-dot.active {
+      background: var(--accent);
+    }
+
+    .msg-question .q-dot.done {
+      background: var(--tag-high-text);
     }
 
     .msg-assistant .intro {
@@ -134,9 +248,7 @@
       font-style: italic;
     }
 
-    .tier {
-      margin-bottom: 12px;
-    }
+    .tier { margin-bottom: 12px; }
 
     .tier-label {
       font-size: 0.75rem;
@@ -149,20 +261,12 @@
       gap: 6px;
     }
 
-    .tier-label .count {
-      font-weight: 400;
-      color: var(--text-muted);
-    }
-
+    .tier-label .count { font-weight: 400; color: var(--text-muted); }
     .tier-high .tier-label { color: var(--tag-high-text); }
     .tier-medium .tier-label { color: var(--tag-med-text); }
     .tier-explore .tier-label { color: var(--tag-explore-text); }
 
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 
     .tag {
       display: inline-block;
@@ -176,21 +280,12 @@
     }
 
     .tag:active { transform: scale(0.96); }
-
     .tier-high .tag { background: var(--tag-high); color: var(--tag-high-text); }
     .tier-medium .tag { background: var(--tag-med); color: var(--tag-med-text); }
     .tier-explore .tag { background: var(--tag-explore); color: var(--tag-explore-text); }
+    .tag.copied { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-    .tag.copied {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
+    .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 
     .actions button {
       font-family: var(--font-body);
@@ -204,10 +299,7 @@
       transition: all 0.15s;
     }
 
-    .actions button:hover {
-      border-color: var(--text-muted);
-      color: var(--text);
-    }
+    .actions button:hover { border-color: var(--text-muted); color: var(--text); }
 
     .toast {
       position: fixed;
@@ -225,10 +317,7 @@
       z-index: 10;
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     .typing {
       display: flex;
@@ -238,13 +327,9 @@
     }
 
     .typing span {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
-      animation: bounce 1.4s infinite;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); animation: bounce 1.4s infinite;
     }
-
     .typing span:nth-child(2) { animation-delay: 0.2s; }
     .typing span:nth-child(3) { animation-delay: 0.4s; }
 
@@ -271,95 +356,78 @@
     }
 
     #input-area input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-family: var(--font-body);
-      font-size: 1rem;
-      padding: 10px 12px;
-      background: transparent;
-      color: var(--text);
+      flex: 1; border: none; outline: none;
+      font-family: var(--font-body); font-size: 1rem;
+      padding: 10px 12px; background: transparent; color: var(--text);
     }
 
     #input-area input::placeholder { color: #aaa; }
 
     #input-area button {
-      background: var(--text);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
+      background: var(--text); color: white; border: none;
+      border-radius: 8px; padding: 10px 20px;
+      font-family: var(--font-body); font-size: 0.95rem;
+      font-weight: 500; cursor: pointer; transition: opacity 0.15s;
       min-height: 44px;
     }
 
-    #input-area button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
+    #input-area button:disabled { opacity: 0.4; cursor: not-allowed; }
 
     footer {
-      text-align: center;
-      padding: 12px 0 20px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+      text-align: center; padding: 12px 0 20px;
+      font-size: 0.8rem; color: var(--text-muted);
     }
 
     footer a {
-      color: var(--text-muted);
-      text-decoration: underline;
-      text-decoration-color: var(--border);
-      text-underline-offset: 2px;
+      color: var(--text-muted); text-decoration: underline;
+      text-decoration-color: var(--border); text-underline-offset: 2px;
     }
 
     .welcome {
-      text-align: center;
-      padding: 40px 20px;
+      text-align: center; padding: 24px 20px 12px;
       color: var(--text-muted);
     }
 
     .welcome h2 {
       font-family: var(--font-heading);
-      font-size: 1.1rem;
-      color: var(--text);
-      margin-bottom: 8px;
-      font-weight: 600;
+      font-size: 1.1rem; color: var(--text);
+      margin-bottom: 4px; font-weight: 600;
     }
 
-    .welcome p { font-size: 0.9rem; margin-bottom: 16px; }
+    .welcome p { font-size: 0.9rem; }
 
-    .examples {
+    .how-it-works {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
       justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+      padding: 0 8px;
     }
 
-    .examples button {
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: white;
+    .how-step {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .how-step .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--tag-bg);
       color: var(--text);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .examples button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 4px;
     }
 
     @media (max-width: 480px) {
       header h1 { font-size: 1.4rem; }
       .msg-user { max-width: 90%; }
       .tag { font-size: 0.8rem; padding: 4px 8px; }
+      .how-it-works { gap: 12px; }
     }
   </style>
 </head>
@@ -367,26 +435,76 @@
   <div class="container">
     <header>
       <h1>LinkedIn Title Finder</h1>
-      <p>Describe your audience. Get the exact job titles for Campaign Manager.</p>
+      <p>Build precise audiences for LinkedIn Campaign Manager.</p>
       <span class="badge">23,400+ official LinkedIn titles</span>
     </header>
 
+    <!-- Example audiences -->
+    <div class="examples-section" id="examples-section">
+      <h2>Example audiences</h2>
+      <div class="example-cards">
+        <div class="example-card" onclick="loadExample(0)">
+          <div class="card-label">B2B SaaS</div>
+          <h3>Marketing decision makers</h3>
+          <div class="card-meta">VP+ level, buying marketing tools</div>
+          <div class="card-tags">
+            <span class="card-tag">Marketing Director</span>
+            <span class="card-tag">VP Marketing</span>
+            <span class="card-tag">CMO</span>
+            <span class="card-tag med">+22 more</span>
+          </div>
+          <div class="card-more">Click to explore &rarr;</div>
+        </div>
+        <div class="example-card" onclick="loadExample(1)">
+          <div class="card-label">Retail</div>
+          <h3>Procurement & buying</h3>
+          <div class="card-meta">Retail buyers, merchandisers, category leads</div>
+          <div class="card-tags">
+            <span class="card-tag">Buyer</span>
+            <span class="card-tag">Category Manager</span>
+            <span class="card-tag">Merchandiser</span>
+            <span class="card-tag med">+18 more</span>
+          </div>
+          <div class="card-more">Click to explore &rarr;</div>
+        </div>
+        <div class="example-card" onclick="loadExample(2)">
+          <div class="card-label">HR Tech</div>
+          <h3>People & talent leaders</h3>
+          <div class="card-meta">HR directors, talent acquisition, CHRO</div>
+          <div class="card-tags">
+            <span class="card-tag">HR Director</span>
+            <span class="card-tag">CHRO</span>
+            <span class="card-tag">Talent Lead</span>
+            <span class="card-tag med">+25 more</span>
+          </div>
+          <div class="card-more">Click to explore &rarr;</div>
+        </div>
+      </div>
+    </div>
+
     <div id="chat">
-      <div class="welcome">
-        <h2>Who are you trying to reach?</h2>
-        <p>Describe your target audience and I'll find the matching LinkedIn job titles.</p>
-        <div class="examples">
-          <button onclick="sendExample(this)">Marketing decision makers at B2B SaaS</button>
-          <button onclick="sendExample(this)">CFOs and finance leaders</button>
-          <button onclick="sendExample(this)">HR professionals who buy software</button>
-          <button onclick="sendExample(this)">Procurement in manufacturing</button>
+      <div class="welcome" id="welcome">
+        <h2>How it works</h2>
+        <div class="how-it-works">
+          <div class="how-step">
+            <div class="step-num">1</div>
+            <div>Describe your audience</div>
+          </div>
+          <div class="how-step">
+            <div class="step-num">2</div>
+            <div>Answer a few questions</div>
+          </div>
+          <div class="how-step">
+            <div class="step-num">3</div>
+            <div>Get titles to copy</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div id="input-area">
       <form onsubmit="send(event)">
-        <input type="text" id="msg" placeholder="Describe your target audience..." autocomplete="off" autofocus>
+        <input type="text" id="msg" placeholder="Who are you trying to reach on LinkedIn?" autocomplete="off" autofocus>
         <button type="submit" id="btn">Send</button>
       </form>
     </div>
@@ -400,24 +518,33 @@
 
   <script>
     const chat = document.getElementById('chat')
-    const msg = document.getElementById('msg')
+    const msgInput = document.getElementById('msg')
     const btn = document.getElementById('btn')
     let history = []
     let busy = false
+    let questionCount = 0
 
-    function sendExample(el) {
-      msg.value = el.textContent
+    const EXAMPLES = [
+      "I'm selling a marketing automation platform to mid-size B2B SaaS companies. I want to target marketing decision makers who control the budget.",
+      "I want to target retail buyers in Denmark - people who make purchasing decisions for retail chains and department stores.",
+      "We're an HR tech startup selling to people and talent leaders at companies with 200-5000 employees."
+    ]
+
+    function loadExample(idx) {
+      msgInput.value = EXAMPLES[idx]
       send(new Event('submit'))
     }
 
     async function send(e) {
       e.preventDefault()
-      const text = msg.value.trim()
+      const text = msgInput.value.trim()
       if (!text || busy) return
 
-      // Remove welcome
-      const welcome = chat.querySelector('.welcome')
+      // Remove welcome + examples on first message
+      const welcome = document.getElementById('welcome')
       if (welcome) welcome.remove()
+      const examples = document.getElementById('examples-section')
+      if (examples) examples.remove()
 
       // Add user message
       const userDiv = document.createElement('div')
@@ -425,7 +552,7 @@
       userDiv.textContent = text
       chat.appendChild(userDiv)
 
-      msg.value = ''
+      msgInput.value = ''
       busy = true
       btn.disabled = true
 
@@ -444,15 +571,29 @@
         })
 
         typing.remove()
-
         if (!res.ok) throw new Error('Request failed')
         const data = await res.json()
 
+        // Store raw JSON in history for the backend to parse
         history.push({ role: 'user', content: text })
-        history.push({ role: 'assistant', content: data.message })
-        if (history.length > 16) history = history.slice(-16)
+        history.push({ role: 'assistant', content: JSON.stringify(data) })
+        if (history.length > 20) history = history.slice(-20)
 
-        renderResponse(data)
+        if (data.type === 'question') {
+          renderQuestion(data)
+        } else if (data.type === 'ready') {
+          renderReady(data)
+          // Auto-trigger title generation
+          setTimeout(() => autoGenerate(data), 500)
+        } else if (data.type === 'titles' || data.titles) {
+          renderTitles(data)
+        } else {
+          // Fallback - show as text
+          const div = document.createElement('div')
+          div.className = 'msg msg-assistant msg-question'
+          div.innerHTML = `<div class="q-text">${esc(data.message || JSON.stringify(data))}</div>`
+          chat.appendChild(div)
+        }
       } catch (err) {
         typing.remove()
         const errDiv = document.createElement('div')
@@ -464,33 +605,97 @@
       busy = false
       btn.disabled = false
       chat.scrollTop = chat.scrollHeight
+      msgInput.focus()
     }
 
-    function renderResponse(data) {
+    function renderQuestion(data) {
+      questionCount = data.questionNumber || questionCount + 1
+      const total = data.totalQuestions || 5
+
+      const div = document.createElement('div')
+      div.className = 'msg msg-assistant msg-question'
+
+      let dots = ''
+      for (let i = 1; i <= total; i++) {
+        const cls = i < questionCount ? 'done' : i === questionCount ? 'active' : ''
+        dots += `<div class="q-dot ${cls}"></div>`
+      }
+
+      div.innerHTML = `
+        <div class="q-text">${esc(data.message)}</div>
+        <div class="q-progress">${dots}</div>
+      `
+      chat.appendChild(div)
+    }
+
+    function renderReady(data) {
+      const div = document.createElement('div')
+      div.className = 'msg msg-assistant msg-question'
+      div.innerHTML = `<div class="q-text">${esc(data.message)}</div>`
+      chat.appendChild(div)
+    }
+
+    async function autoGenerate(readyData) {
+      busy = true
+      btn.disabled = true
+
+      const typing = document.createElement('div')
+      typing.className = 'typing'
+      typing.innerHTML = '<span></span><span></span><span></span>'
+      chat.appendChild(typing)
+      chat.scrollTop = chat.scrollHeight
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: readyData.searchDescription || 'Generate titles now',
+            history
+          })
+        })
+
+        typing.remove()
+        if (!res.ok) throw new Error('Request failed')
+        const data = await res.json()
+
+        history.push({ role: 'user', content: readyData.searchDescription || 'generate' })
+        history.push({ role: 'assistant', content: JSON.stringify(data) })
+
+        renderTitles(data)
+      } catch {
+        typing.remove()
+      }
+
+      busy = false
+      btn.disabled = false
+      chat.scrollTop = chat.scrollHeight
+    }
+
+    function renderTitles(data) {
       const div = document.createElement('div')
       div.className = 'msg msg-assistant'
 
       let html = `<div class="intro">${esc(data.message)}</div>`
-
       const allTitles = []
 
-      if (data.titles.high?.length) {
+      if (data.titles?.high?.length) {
         allTitles.push(...data.titles.high)
         html += renderTier('High match', data.titles.high, 'high')
       }
-      if (data.titles.medium?.length) {
+      if (data.titles?.medium?.length) {
         allTitles.push(...data.titles.medium)
         html += renderTier('Medium match', data.titles.medium, 'medium')
       }
-      if (data.titles.explore?.length) {
+      if (data.titles?.explore?.length) {
         allTitles.push(...data.titles.explore)
         html += renderTier('Worth exploring', data.titles.explore, 'explore')
       }
 
       if (allTitles.length > 0) {
         html += `<div class="actions">
-          <button onclick="copyAll(this, 'high')">Copy high match (${data.titles.high?.length || 0})</button>
-          <button onclick="copyAll(this, 'all')">Copy all ${data.totalCount} titles</button>
+          <button onclick="copyAll(this, 'high')">Copy high match (${data.titles?.high?.length || 0})</button>
+          <button onclick="copyAll(this, 'all')">Copy all ${data.totalCount || allTitles.length} titles</button>
         </div>`
       }
 
@@ -507,7 +712,7 @@
     }
 
     function renderTier(label, titles, tier) {
-      const tags = titles.map(t => 
+      const tags = titles.map(t =>
         `<button class="tag" onclick="copyTag(this, '${esc(t).replace(/'/g, "\\'")}')">${esc(t)}</button>`
       ).join('')
       return `<div class="tier tier-${tier}">
@@ -543,6 +748,7 @@
     }
 
     function esc(s) {
+      if (!s) return ''
       const d = document.createElement('div')
       d.textContent = s
       return d.innerHTML

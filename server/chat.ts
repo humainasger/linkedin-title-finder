@@ -13,7 +13,6 @@ function searchTitles(query: string, allTitles: string[]): string[] {
       if (lower === term) score += 10
       else if (lower.includes(term)) score += 3
       else {
-        // Fuzzy: check if any word in the title starts with the term
         const words = lower.split(/\s+/)
         for (const w of words) {
           if (w.startsWith(term) || term.startsWith(w)) score += 1
@@ -29,75 +28,205 @@ function searchTitles(query: string, allTitles: string[]): string[] {
     .map(([t]) => t)
 }
 
-const SYSTEM_PROMPT = `You are an expert LinkedIn Ads audience targeting consultant. You help advertisers find the exact job titles available in LinkedIn's Campaign Manager for their target audience.
+const INTERVIEW_SYSTEM = `You are an expert LinkedIn Ads audience targeting consultant. Your job is to help advertisers build precise audiences using LinkedIn's job title targeting.
+
+When a user gives you an initial audience description, you need to interview them to get the full picture before recommending titles. You ask SHORT, conversational questions - one at a time.
+
+Here's what you need to know (in order of importance):
+1. What company or product are the ads for? (helps you understand what they're selling)
+2. What's the seniority level they want? (decision makers, practitioners, or both)
+3. Any specific industries or verticals to focus on?
+4. What company size are they targeting? (startup, SMB, mid-market, enterprise)
+5. Anything to EXCLUDE? (titles or roles that would waste budget)
+
+RULES:
+- Ask ONE question at a time
+- Keep questions short and casual (1-2 sentences max)
+- If the user already answered something in their initial prompt, skip that question
+- After you have enough context (3-5 questions answered), say you're ready to generate titles
+- Always respond in JSON format
+
+Response format:
+{
+  "type": "question",
+  "message": "Your question here",
+  "questionNumber": 1,
+  "totalQuestions": 5,
+  "context": { "company": null, "seniority": null, "industry": null, "companySize": null, "exclusions": null }
+}
+
+When you have enough info and want to signal you're ready:
+{
+  "type": "ready",
+  "message": "Great, I have a clear picture. Let me find the best titles for you.",
+  "context": { "company": "...", "seniority": "...", "industry": "...", "companySize": "...", "exclusions": "..." },
+  "searchDescription": "A comprehensive description combining all the context for title search"
+}`
+
+const TITLES_SYSTEM = `You are an expert LinkedIn Ads audience targeting consultant. You help advertisers find the exact job titles available in LinkedIn's Campaign Manager for their target audience.
 
 You have access to the full list of ~23,000 official LinkedIn ad-targetable job titles.
 
-When the user describes their target audience:
-1. Think about what roles, seniority levels, and functions match their description
+Given the full context about the advertiser and their target audience:
+1. Think about what roles, seniority levels, and functions match
 2. Search for relevant titles across different phrasings and seniority levels
 3. Group your suggestions by match quality
+4. Consider the company/product context to pick titles of people who would BUY that product
 
 IMPORTANT RULES:
 - ONLY suggest titles from the provided candidate list - never make up titles
-- Think broadly: if someone says "decision makers in IT", include CTOs, CIOs, IT Directors, VP of Engineering, etc.
-- Consider adjacent roles that might also be relevant
+- Think broadly about adjacent roles
 - Be practical: explain WHY certain titles are included
+- Reference the company/product when explaining your reasoning
 
 Respond in this exact JSON format:
 {
-  "intro": "Brief 1-2 sentence summary of your approach",
+  "intro": "Brief 1-2 sentence summary referencing their company/product",
   "high": ["Title 1", "Title 2"],
   "medium": ["Title 3", "Title 4"],
   "explore": ["Title 5", "Title 6"],
-  "reasoning": "Brief explanation of your grouping logic",
-  "tip": "One practical tip for their LinkedIn campaign targeting"
+  "reasoning": "Brief explanation of your grouping logic, referencing their specific context",
+  "tip": "One practical tip for their specific LinkedIn campaign"
 }
 
-- "high": Titles that directly match the described audience (core targets)
-- "medium": Titles that are adjacent or secondary matches (good to include)
-- "explore": Titles worth testing that might surprise them
+- "high": Core targets - directly match the described audience (5-20 titles)
+- "medium": Adjacent matches - good to include for broader reach (5-15 titles)
+- "explore": Worth testing - might surprise them (3-10 titles)
 
-Keep each tier to 5-25 titles max. Quality over quantity.`
+Quality over quantity.`
 
 export async function chatHandler(
   message: string,
   history: { role: string; content: string }[],
   allTitles: string[]
 ) {
-  // Step 1: Ask Claude to generate search terms
-  const searchResponse = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
-    max_tokens: 300,
-    system: 'Extract search keywords from this audience description. Return ONLY a comma-separated list of keywords/phrases to search for in a job title database. Include variations, synonyms, related terms, seniority levels. No explanation, just the keywords.',
-    messages: [{ role: 'user', content: message }]
-  })
+  // Determine if we're in interview mode or title generation mode
+  // Check if the last assistant message was a "ready" signal
+  const lastAssistantMsg = [...history].reverse().find(h => h.role === 'assistant')
+  let isReadyToGenerate = false
+  let fullContext = ''
 
-  const searchTerms = (searchResponse.content[0] as any).text || message
-  
-  // Step 2: Local search
-  const candidates = searchTitles(searchTerms + ' ' + message, allTitles)
-  
-  if (candidates.length === 0) {
-    return {
-      message: "I couldn't find any matching titles. Try describing your audience differently - for example, mention the job function, seniority level, or industry.",
-      titles: { high: [], medium: [], explore: [] },
-      totalCount: 0,
-      reasoning: "No matches found for the given description."
+  if (lastAssistantMsg) {
+    try {
+      const parsed = JSON.parse(lastAssistantMsg.content)
+      if (parsed.type === 'ready') {
+        isReadyToGenerate = true
+        fullContext = parsed.searchDescription || ''
+      }
+    } catch {
+      // Not JSON - check if it contains title results (already generated)
+      // Continue with interview
     }
   }
 
-  // Step 3: Claude reasons over candidates
+  // Check if this is a follow-up after titles were already shown
+  // (user says "also add finance titles" or "remove the junior ones")
+  const hasResults = history.some(h => {
+    try {
+      const p = JSON.parse(h.content)
+      return p.type === 'titles'
+    } catch { return false }
+  })
+
+  if (hasResults) {
+    // Refinement mode - generate new titles based on the full conversation
+    return await generateTitles(message, history, allTitles, '')
+  }
+
+  if (isReadyToGenerate) {
+    // User just confirmed, now generate titles
+    return await generateTitles(message, history, allTitles, fullContext)
+  }
+
+  // Interview mode
+  return await interviewStep(message, history)
+}
+
+async function interviewStep(
+  message: string,
+  history: { role: string; content: string }[]
+) {
   const msgs: Anthropic.MessageParam[] = [
-    ...history.slice(-8).map(h => ({
+    ...history.slice(-10).map(h => ({
       role: h.role as 'user' | 'assistant',
       content: h.content
     })),
+    { role: 'user', content: message }
+  ]
+
+  const response = await client.messages.create({
+    model: 'claude-3-5-haiku-20241022',
+    max_tokens: 500,
+    system: INTERVIEW_SYSTEM,
+    messages: msgs
+  })
+
+  const text = (response.content[0] as any).text || '{}'
+
+  let parsed
+  try {
+    const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
+    parsed = JSON.parse(jsonStr)
+  } catch {
+    return {
+      type: 'question' as const,
+      message: text,
+      questionNumber: 0,
+      totalQuestions: 5
+    }
+  }
+
+  return parsed
+}
+
+async function generateTitles(
+  message: string,
+  history: { role: string; content: string }[],
+  allTitles: string[],
+  contextOverride: string
+) {
+  // Build full context from conversation history
+  const conversationContext = contextOverride || history
+    .filter(h => h.role === 'user')
+    .map(h => h.content)
+    .join(' ') + ' ' + message
+
+  // Step 1: Generate search terms
+  const searchResponse = await client.messages.create({
+    model: 'claude-3-5-haiku-20241022',
+    max_tokens: 400,
+    system: 'Extract search keywords from this audience targeting context. Return ONLY a comma-separated list of keywords/phrases to search for in a job title database. Include variations, synonyms, related terms, seniority levels. Think about what job titles would be relevant for someone buying this product/service. No explanation, just the keywords.',
+    messages: [{ role: 'user', content: conversationContext }]
+  })
+
+  const searchTerms = (searchResponse.content[0] as any).text || message
+
+  // Step 2: Local search
+  const candidates = searchTitles(searchTerms + ' ' + conversationContext, allTitles)
+
+  if (candidates.length === 0) {
+    return {
+      type: 'titles' as const,
+      message: "I couldn't find matching titles. Could you describe the roles differently?",
+      titles: { high: [], medium: [], explore: [] },
+      totalCount: 0,
+      reasoning: "No matches found."
+    }
+  }
+
+  // Step 3: Build the full context for the title selection
+  const contextSummary = history
+    .map(h => `${h.role}: ${h.content}`)
+    .join('\n')
+
+  const msgs: Anthropic.MessageParam[] = [
     {
       role: 'user',
-      content: `Target audience description: "${message}"
+      content: `Full conversation context:
+${contextSummary}
+User's latest message: ${message}
 
-Here are ${candidates.length} candidate job titles from LinkedIn's database. Select and group the most relevant ones:
+Here are ${candidates.length} candidate job titles from LinkedIn's database. Select and group the most relevant ones based on ALL the context above:
 
 ${candidates.join('\n')}`
     }
@@ -106,20 +235,19 @@ ${candidates.join('\n')}`
   const response = await client.messages.create({
     model: 'claude-3-5-haiku-20241022',
     max_tokens: 2000,
-    system: SYSTEM_PROMPT,
+    system: TITLES_SYSTEM,
     messages: msgs
   })
 
   const text = (response.content[0] as any).text || '{}'
-  
-  // Parse JSON from response (handle markdown code blocks)
+
   let parsed
   try {
     const jsonStr = text.replace(/```json?\n?/g, '').replace(/```/g, '').trim()
     parsed = JSON.parse(jsonStr)
   } catch {
-    // Fallback: return raw text
     return {
+      type: 'titles' as const,
       message: text,
       titles: { high: candidates.slice(0, 15), medium: candidates.slice(15, 30), explore: [] },
       totalCount: Math.min(candidates.length, 30),
@@ -132,6 +260,7 @@ ${candidates.join('\n')}`
   const explore = parsed.explore || []
 
   return {
+    type: 'titles' as const,
     message: parsed.intro || "Here are my suggestions:",
     titles: { high, medium, explore },
     totalCount: high.length + medium.length + explore.length,
