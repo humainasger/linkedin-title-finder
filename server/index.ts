@@ -66,25 +66,54 @@ app.post('/api/scan', async (c) => {
     let url = body.url.trim()
     if (!url.startsWith('http')) url = 'https://' + url
 
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TitleFinder/1.0)' },
-      signal: AbortSignal.timeout(8000)
-    })
-    const html = await res.text()
+    // Use Firecrawl for clean markdown extraction
+    const firecrawlKey = process.env.FIRECRAWL_API_KEY
+    let pageContent = ''
+    let pageTitle = ''
+    let pageDesc = ''
 
-    // Extract text content (strip tags, scripts, styles)
-    const cleaned = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 4000)
+    if (firecrawlKey) {
+      const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url,
+          formats: ['markdown'],
+          onlyMainContent: true,
+          timeout: 10000
+        }),
+        signal: AbortSignal.timeout(15000)
+      })
+      const fcData = await fcRes.json() as any
+      if (fcData.success && fcData.data) {
+        pageContent = (fcData.data.markdown || '').slice(0, 5000)
+        pageTitle = fcData.data.metadata?.title || ''
+        pageDesc = fcData.data.metadata?.description || fcData.data.metadata?.ogDescription || ''
+      }
+    }
 
-    // Extract meta info
-    const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i)
-    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["'](.*?)["']/i)
-    const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["'](.*?)["']/i)
+    // Fallback to basic fetch if Firecrawl unavailable or failed
+    if (!pageContent) {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TitleFinder/1.0)' },
+        signal: AbortSignal.timeout(8000)
+      })
+      const html = await res.text()
+      pageContent = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 4000)
+      const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i)
+      const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["'](.*?)["']/i)
+      pageTitle = titleMatch?.[1] || ''
+      pageDesc = descMatch?.[1] || ''
+    }
 
     // Use Claude to summarize the company
     const { default: Anthropic } = await import('@anthropic-ai/sdk')
@@ -96,7 +125,7 @@ app.post('/api/scan', async (c) => {
       system: 'You analyze websites to extract company information. Return a brief JSON object with: company (name), product (what they sell/do), industry, targetCustomers (who buys from them), companySize (if detectable). Be concise. Only JSON, no explanation.',
       messages: [{
         role: 'user',
-        content: `Website: ${url}\nTitle: ${titleMatch?.[1] || 'unknown'}\nMeta description: ${descMatch?.[1] || ogDescMatch?.[1] || 'none'}\n\nPage content:\n${cleaned}`
+        content: `Website: ${url}\nTitle: ${pageTitle || 'unknown'}\nMeta description: ${pageDesc || 'none'}\n\nPage content:\n${pageContent}`
       }]
     })
 
