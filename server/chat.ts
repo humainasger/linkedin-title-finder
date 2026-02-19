@@ -67,7 +67,7 @@ export async function chatHandler(
 ) {
   // Step 1: Ask Claude to generate search terms
   const searchResponse = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250514',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 300,
     system: 'Extract search keywords from this audience description. Return ONLY a comma-separated list of keywords/phrases to search for in a job title database. Include variations, synonyms, related terms, seniority levels. No explanation, just the keywords.',
     messages: [{ role: 'user', content: message }]
@@ -104,7 +104,7 @@ ${candidates.join('\n')}`
   ]
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250514',
+    model: 'claude-3-5-haiku-20241022',
     max_tokens: 2000,
     system: SYSTEM_PROMPT,
     messages: msgs
