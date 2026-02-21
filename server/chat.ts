@@ -161,7 +161,7 @@ async function interviewStep(
   ]
 
   const response = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-haiku-4-5-20250414',
     max_tokens: 500,
     system: INTERVIEW_SYSTEM,
     messages: msgs
@@ -223,7 +223,7 @@ async function generateTitles(
 
   // Step 1: Generate search terms
   const searchResponse = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-haiku-4-5-20250414',
     max_tokens: 400,
     system: 'Extract search keywords from this audience targeting context. Return ONLY a comma-separated list of keywords/phrases to search for in a job title database. Include variations, synonyms, related terms, seniority levels. Think about what job titles would be relevant for someone buying this product/service. No explanation, just the keywords.',
     messages: [{ role: 'user', content: conversationContext }]
@@ -263,7 +263,7 @@ ${candidates.join('\n')}`
   ]
 
   const response = await client.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-haiku-4-5-20250414',
     max_tokens: 2000,
     system: TITLES_SYSTEM,
     messages: msgs
