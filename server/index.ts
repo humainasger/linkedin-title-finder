@@ -120,7 +120,7 @@ app.post('/api/scan', async (c) => {
     const client = new Anthropic()
 
     const summary = await client.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 300,
       system: 'You analyze websites to extract company information. Return a brief JSON object with: company (name), product (what they sell/do), industry, targetCustomers (who buys from them), companySize (if detectable). Be concise. Only JSON, no explanation.',
       messages: [{
